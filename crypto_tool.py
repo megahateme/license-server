@@ -19,7 +19,6 @@ def load_or_create_key():
 cipher = Fernet(load_or_create_key())
 
 def encrypt_file():
-    # ТЕПЕРЬ МОЖНО ВЫБРАТЬ ЛЮБОЙ ФАЙЛ
     file_path = filedialog.askopenfilename(filetypes=[("All files", "*.*")])
     if not file_path:
         return
@@ -32,7 +31,6 @@ def encrypt_file():
     messagebox.showinfo("Готово", f"Зашифровано:\n{out_path}")
 
 def run_encrypted():
-    # ПРИ РАСШИФРОВКЕ ТОЖЕ ЛЮБОЙ
     file_path = filedialog.askopenfilename(filetypes=[("All files", "*.*")])
     if not file_path:
         return
@@ -40,12 +38,33 @@ def run_encrypted():
         with open(file_path, "rb") as f:
             encrypted_data = f.read()
         decrypted = cipher.decrypt(encrypted_data)
+
         temp_dir = tempfile.gettempdir()
-        temp_file = os.path.join(temp_dir, "temp_decrypted.bin")
+        
+        # Определяем расширение исходного файла
+        base_name = os.path.basename(file_path)
+        if base_name.endswith(".enc"):
+            base_name = base_name[:-4]  # убираем .enc
+        
+        ext = os.path.splitext(base_name)[1]
+        
+        # Для .bat используем .bat, для остальных — .bin
+        if ext.lower() == ".bat":
+            temp_file = os.path.join(temp_dir, "temp_decrypted.bat")
+        else:
+            temp_file = os.path.join(temp_dir, "temp_decrypted.bin")
+
         with open(temp_file, "wb") as f:
             f.write(decrypted)
-        subprocess.Popen(temp_file)
-        messagebox.showinfo("Готово", "Файл запущен")
+
+        # Запускаем / открываем файл
+        if ext.lower() == ".bat":
+            # Для .bat — запускаем через cmd
+            subprocess.Popen(["cmd", "/c", "start", temp_file])
+        else:
+            os.startfile(temp_file)
+
+        messagebox.showinfo("Готово", f"Файл открыт:\n{os.path.basename(temp_file)}")
     except Exception as e:
         messagebox.showerror("Ошибка", str(e))
 

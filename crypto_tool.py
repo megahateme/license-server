@@ -28,7 +28,7 @@ def encrypt_file():
     out_path = file_path + ".enc"
     with open(out_path, "wb") as f:
         f.write(encrypted)
-    messagebox.showinfo("Готово", f"Зашифровано:\n{out_path}")
+    messagebox.showinfo("Готово", f"Выполнил:\n{out_path}")
 
 def run_encrypted():
     file_path = filedialog.askopenfilename(filetypes=[("All files", "*.*")])

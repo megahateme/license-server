@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+
+# Build files
+build/
+dist/
+
+# PyInstaller
+*.spec
+
+# Database
+*.db
+
+# Virtual env
+venv/
+.venv/
+
+# Windows
+Thumbs.db
+Desktop.ini

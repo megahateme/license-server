@@ -1,4 +1,4 @@
-fastapi
-uvicorn
-pydantic
-cryptography
+fastapi==0.115.0
+uvicorn==0.30.0
+pydantic==2.10.0
+cryptography==44.0.0

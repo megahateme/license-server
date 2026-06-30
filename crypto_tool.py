@@ -19,7 +19,8 @@ def load_or_create_key():
 cipher = Fernet(load_or_create_key())
 
 def encrypt_file():
-    file_path = filedialog.askopenfilename(filetypes=[("EXE files", "*.exe")])
+    # ТЕПЕРЬ МОЖНО ВЫБРАТЬ ЛЮБОЙ ФАЙЛ
+    file_path = filedialog.askopenfilename(filetypes=[("All files", "*.*")])
     if not file_path:
         return
     with open(file_path, "rb") as f:
@@ -31,7 +32,8 @@ def encrypt_file():
     messagebox.showinfo("Готово", f"Зашифровано:\n{out_path}")
 
 def run_encrypted():
-    file_path = filedialog.askopenfilename(filetypes=[("ENC files", "*.enc")])
+    # ПРИ РАСШИФРОВКЕ ТОЖЕ ЛЮБОЙ
+    file_path = filedialog.askopenfilename(filetypes=[("All files", "*.*")])
     if not file_path:
         return
     try:
@@ -39,23 +41,22 @@ def run_encrypted():
             encrypted_data = f.read()
         decrypted = cipher.decrypt(encrypted_data)
         temp_dir = tempfile.gettempdir()
-        temp_exe = os.path.join(temp_dir, "temp_run.exe")
-        with open(temp_exe, "wb") as f:
+        temp_file = os.path.join(temp_dir, "temp_decrypted.bin")
+        with open(temp_file, "wb") as f:
             f.write(decrypted)
-        subprocess.Popen(temp_exe)
-        messagebox.showinfo("Готово", "Программа запущена")
+        subprocess.Popen(temp_file)
+        messagebox.showinfo("Готово", "Файл запущен")
     except Exception as e:
         messagebox.showerror("Ошибка", str(e))
 
 # GUI
 root = tk.Tk()
-root.title("EXE Encrypt Tool")
+root.title("Universal Encrypt Tool")
 root.geometry("320x250")
 root.resizable(False, False)
 
-tk.Label(root, text="EXE Encrypt Tool", font=("Arial", 14, "bold")).pack(pady=10)
+tk.Label(root, text="Universal Encrypt Tool", font=("Arial", 14, "bold")).pack(pady=10)
 
-# ===== КНОПКИ С НОВЫМИ НАЗВАНИЯМИ =====
 tk.Button(root, text="ТЫК (1)", command=encrypt_file, height=2, width=25).pack(pady=5)
 tk.Button(root, text="ТЫК (2)", command=run_encrypted, height=2, width=25).pack(pady=5)
 tk.Button(root, text="❌ Выход", command=root.quit, height=2, width=25).pack(pady=10)

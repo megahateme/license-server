@@ -4,11 +4,15 @@ import os
 import sys
 import tempfile
 import shutil
+import json
 import tkinter as tk
-from tkinter import messagebox, ttk
+from tkinter import messagebox
 
+# ======== НАСТРОЙКИ ========
 SERVER_URL = "https://license-server-q7pe.onrender.com/check"
+LICENSE_FILE = "license.dat"
 
+# ======== HWID ========
 def get_hwid():
     try:
         result = subprocess.run(["wmic", "cpu", "get", "ProcessorId"], capture_output=True, text=True)
@@ -19,6 +23,34 @@ def get_hwid():
         pass
     return "PC-12345"
 
+# ======== РАБОТА С ЛИЦЕНЗИЕЙ (СОХРАНЕНИЕ) ========
+def save_license(token, hwid):
+    data = {
+        "token": token,
+        "hwid": hwid
+    }
+    with open(LICENSE_FILE, "w") as f:
+        json.dump(data, f)
+
+def load_license():
+    if not os.path.exists(LICENSE_FILE):
+        return None
+    try:
+        with open(LICENSE_FILE, "r") as f:
+            return json.load(f)
+    except:
+        return None
+
+def is_license_valid():
+    data = load_license()
+    if not data:
+        return False
+    current_hwid = get_hwid()
+    if data.get("hwid") != current_hwid:
+        return False
+    return True
+
+# ======== ЗАПУСК CRYPTO_TOOL ========
 def run_crypto_tool():
     temp_dir = tempfile.gettempdir()
     crypto_exe = os.path.join(temp_dir, "crypto_tool.exe")
@@ -37,6 +69,7 @@ def run_crypto_tool():
     subprocess.Popen([crypto_exe])
     return True
 
+# ======== ПРОВЕРКА КЛЮЧА ========
 def check_license():
     key = entry_key.get().strip()
     if not key:
@@ -56,6 +89,8 @@ def check_license():
         return
     
     if data.get("status") == "ok":
+        # СОХРАНЯЕМ ЛИЦЕНЗИЮ
+        save_license(data.get("token"), hwid)
         status_label.config(text="✅ Лицензия активирована!")
         root.after(500, lambda: close_and_run())
     else:
@@ -66,26 +101,39 @@ def close_and_run():
     root.destroy()
     run_crypto_tool()
 
-# ========== СОЗДАНИЕ GUI ==========
-root = tk.Tk()
-root.title("Активация лицензии")
-root.geometry("400x250")
-root.resizable(False, False)
+# ======== ОСНОВНАЯ ЛОГИКА ========
+def main():
+    global root, entry_key, status_label
 
-tk.Label(root, text="🔐 АКТИВАЦИЯ ЛИЦЕНЗИИ", font=("Arial", 16, "bold")).pack(pady=15)
+    # ПРОВЕРЯЕМ, ЕСТЬ ЛИ УЖЕ СОХРАНЁННАЯ ЛИЦЕНЗИЯ
+    if is_license_valid():
+        root = tk.Tk()
+        root.withdraw()
+        messagebox.showinfo("Лицензия", "✅ Лицензия уже активирована!")
+        run_crypto_tool()
+        return
 
-tk.Label(root, text="Введите лицензионный ключ:", font=("Arial", 10)).pack()
+    # ЕСЛИ НЕТ — ПОКАЗЫВАЕМ ОКНО АКТИВАЦИИ
+    root = tk.Tk()
+    root.title("Активация лицензии")
+    root.geometry("400x250")
+    root.resizable(False, False)
 
-entry_key = tk.Entry(root, width=35, font=("Arial", 12))
-entry_key.pack(pady=10)
+    tk.Label(root, text="🔐 АКТИВАЦИЯ ЛИЦЕНЗИИ", font=("Arial", 16, "bold")).pack(pady=15)
+    tk.Label(root, text="Введите лицензионный ключ:", font=("Arial", 10)).pack()
 
-btn_check = tk.Button(root, text="✅ Активировать", command=check_license, height=2, width=20, bg="#4CAF50", fg="white")
-btn_check.pack(pady=10)
+    entry_key = tk.Entry(root, width=35, font=("Arial", 12))
+    entry_key.pack(pady=10)
 
-status_label = tk.Label(root, text="", font=("Arial", 10))
-status_label.pack(pady=10)
+    btn_check = tk.Button(root, text="✅ Активировать", command=check_license, height=2, width=20, bg="#4CAF50", fg="white")
+    btn_check.pack(pady=10)
 
-tk.Label(root, text="", font=("Arial", 8)).pack()
-tk.Label(root, text="© License Server", font=("Arial", 8), fg="gray").pack()
+    status_label = tk.Label(root, text="", font=("Arial", 10))
+    status_label.pack(pady=10)
 
-root.mainloop()
+    tk.Label(root, text="© License Server", font=("Arial", 8), fg="gray").pack(side="bottom", pady=5)
+
+    root.mainloop()
+
+if __name__ == "__main__":
+    main()
